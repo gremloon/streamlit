@@ -313,6 +313,20 @@ def activate_reset():
     """Reset Activation Credentials."""
     Credentials.get_current().reset()
 
+def j_main_run(file="/Users/ivanpokupec/Personal/gremloon/streamlit/lib/streamlit/hello/hello.py", args=[]):
+    # command_line = _get_command_line_as_string()
+    # Set a global flag indicating that we're "within" streamlit.
+    streamlit._is_running_with_streamlit = True
+    # Check credentials.
+    # check_credentials()
+    # Notify if streamlit is out of date.
+    # if version.should_show_new_version_notice():
+    #    click.echo(NEW_VERSION_TEXT)
+    # file = "/home/jay/code/streamlit/lib/streamlit/hello/hello.py"
+    command_line = "streamlit hello"
+    args = []
+    bootstrap.run(file, command_line, args)
+
 
 if __name__ == "__main__":
-    main()
+    j_main_run()

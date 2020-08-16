@@ -19,6 +19,8 @@ from collections import OrderedDict
 import streamlit as st
 from streamlit.logger import get_logger
 from streamlit.hello import demos
+from streamlit.hello import sessionx
+import random
 
 LOGGER = get_logger(__name__)
 
@@ -94,12 +96,16 @@ def run():
             st.empty()
 
     demo()
-
+    print("helo")
     if show_code:
         st.markdown("## Code")
         sourcelines, _ = inspect.getsourcelines(demo)
         st.code(textwrap.dedent("".join(sourcelines[1:])))
 
-
+    st.sidebar.file_uploader("Upload orn here")
+    sid = sessionx.get_session_id()
+    st.write(sid)
+    number = random.random()
+    st.markdown("# "+ str(number))
 if __name__ == "__main__":
     run()

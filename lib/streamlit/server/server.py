@@ -37,12 +37,14 @@ from streamlit.forward_msg_cache import populate_hash_if_needed
 from streamlit.media_file_manager import media_file_manager
 from streamlit.report_session import ReportSession
 from streamlit.uploaded_file_manager import UploadedFileManager
+from streamlit.gremloon_request_manager import GremloonRequestManager
 from streamlit.logger import get_logger
 from streamlit.components.v1.components import ComponentRegistry
 from streamlit.components.v1.components import ComponentRequestHandler
 from streamlit.proto.BackMsg_pb2 import BackMsg
 from streamlit.proto.ForwardMsg_pb2 import ForwardMsg
 from streamlit.server.upload_file_request_handler import UploadFileRequestHandler
+from streamlit.server.gremloon_handler import GremloonRequestHandler
 from streamlit.server.routes import AddSlashHandler
 from streamlit.server.routes import AssetsFileHandler
 from streamlit.server.routes import DebugHandler
@@ -217,6 +219,8 @@ class Server(object):
         self._message_cache = ForwardMsgCache()
         self._uploaded_file_mgr = UploadedFileManager()
         self._uploaded_file_mgr.on_files_added.connect(self._on_file_uploaded)
+        self._gremloon_request_manager = GremloonRequestManager()
+        self._gremloon_request_manager.on_rerun_requested.connect(self._on_rerun_requested)
         self._report = None  # type: Optional[Report]
         self._preheated_session_id = None  # type: Optional[str]
 
@@ -239,6 +243,11 @@ class Server(object):
             # If an uploaded file doesn't belong to an existing session,
             # remove it so it doesn't stick around forever.
             self._uploaded_file_mgr.remove_files(file.session_id, file.widget_id)
+
+    def _on_rerun_requested(self, session_id):
+        session_info = self._get_session_info(session_id)
+        if session_info is not None:
+            session_info.session.request_rerun()
 
     def _get_session_info(self, session_id):
         """Return the SessionInfo with the given id, or None if no such
@@ -327,6 +336,10 @@ class Server(object):
                 ComponentRequestHandler,
                 dict(registry=ComponentRegistry.instance()),
             ),
+            (
+                make_url_path_regex(base, "gremloon"),
+                GremloonRequestHandler,
+                dict(gremloon_request_manager=self._gremloon_request_manager))
         ]
 
         if config.get_option("global.developmentMode"):
@@ -403,6 +416,7 @@ class Server(object):
                         msg_list = session_info.session.flush_browser_queue()
                         for msg in msg_list:
                             try:
+
                                 self._send_message(session_info, msg)
                             except tornado.websocket.WebSocketClosedError:
                                 self._close_report_session(session_info.session.id)
@@ -609,7 +623,8 @@ class _BrowserWebSocketHandler(tornado.websocket.WebSocketHandler):
 
     def check_origin(self, origin):
         """Set up CORS."""
-        return super().check_origin(origin) or is_url_from_allowed_origins(origin)
+        #return super().check_origin(origin) or is_url_from_allowed_origins(origin)
+        return True
 
     def open(self):
         self._session = self._server._create_or_reuse_report_session(self)
