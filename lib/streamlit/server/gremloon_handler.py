@@ -101,6 +101,9 @@ class GremloonRequestHandler(tornado.web.RequestHandler):
             self.send_error(400, reason=str(e))
             return
 
+        session_cookie = self.get_cookie("sessionid")
+        print(session_cookie)
+
         self._gremloon_request_manager.request_rerun(session_id)
         self.write({
             "session_id": session_id
