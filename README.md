@@ -173,3 +173,9 @@ Example
 session_cookie = self.get_cookie("sessionid")
 ```
 If the cookie doesn't exist, session_cookie will have the value `None`
+
+### Custom endpoints
+We have added a /gremloon request handler, defined in the /server/gremloon.py file.
+It is using the tornado API and we are adding that handler in the server.py file.
+
+When you send a GET request to /gremloon, that's when the `get` method gets called.
